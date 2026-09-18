@@ -1,0 +1,44 @@
+# =========================
+# Angular / Node
+# =========================
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.angular/
+Frontend/coverage/
+Frontend/npm-debug.log
+Frontend/yarn-error.log
+
+# =========================
+# Java / Spring Boot / Maven
+# =========================
+Backend/target/
+Backend/.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# IDEs
+# =========================
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*

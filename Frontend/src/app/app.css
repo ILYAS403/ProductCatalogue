@@ -1,0 +1,11 @@
+.main-content {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: calc(100vh - 70px);
+}
+
+.catalog-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+}

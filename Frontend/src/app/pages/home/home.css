@@ -1,0 +1,24 @@
+.home-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+  padding: 30px;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 70px);
+  align-items: start;
+}
+
+.products-section {
+  min-width: 0;
+}
+
+.form-section {
+  min-width: 0;
+}
+
+/* Sur petit écran, on repasse l'un sous l'autre */
+@media (max-width: 900px) {
+  .home-container {
+    grid-template-columns: 1fr;
+  }
+}
