@@ -28,6 +28,14 @@ L'application est composée d'un frontend Angular et d'une API REST développée
 - PostgreSQL : choisi pour assurer le stockage persistant des produits dans une base de données relationnelle.
 - Spring Security + JWT : utilisés pour protéger l'ajout de produits et gérer l'authentification.
 
+Le backend utilise une architecture en couches :
+
+Controller → Service → Repository → PostgreSQL
+
+
+Le frontend est organisé avec des composants, pages, services, modèles et un interceptor HTTP pour gérer le JWT.
+
+Cette organisation permet de séparer les responsabilités et de faciliter la maintenance du projet.
 
 ## Structure du projet
 
@@ -36,16 +44,24 @@ L'application est composée d'un frontend Angular et d'une API REST développée
 ##  Prérequis
 
 * Java 21+
-* Node.js
+* Node.js 22.22.x
 * npm
-* Angular CLI
+* Angular CLI 22+
 * PostgreSQL
 
 
 
 ##  Installation
 
-### A. Configuration de la base de données
+### A. Cloner le projet
+
+Cloner le repository :
+
+
+git clone https://github.com/ILYAS403/product-catalog.git
+cd product-catalog
+
+### B. Configuration de la base de données
 
 L'application utilise une base PostgreSQL nommée `product_catalog`.
 
@@ -78,7 +94,7 @@ spring.datasource.password=postgres
 
 
 
-### B. Backend
+### C. Backend
 
 Depuis le dossier `Backend` :
 
@@ -95,7 +111,7 @@ http://localhost:8080
 
 
 
-### C. Frontend
+### D. Frontend
 
 Depuis le dossier `Frontend` :
 
@@ -123,25 +139,17 @@ Password: admin123
 
 L'authentification utilise un token JWT transmis automatiquement par le frontend lors des requêtes protégées.
 
+Si un ancien token JWT est déjà présent dans le navigateur et provoque une erreur d'authentification, il peut être supprimé depuis localStrorage.
 
 
 ##  API principale
 
 ![alt text](images/image-1.png)
 
-##  Choix techniques
 
-Le backend utilise une architecture en couches :
+##  Aperçu de l'application
 
-
-Controller → Service → Repository → PostgreSQL
-
-
-Le frontend est organisé avec des composants, pages, services, modèles et un interceptor HTTP pour gérer le JWT.
-
-Cette organisation permet de séparer les responsabilités et de faciliter la maintenance du projet.
-
-
+![alt text](images/image.png)
 
 ##  Améliorations possibles
 
