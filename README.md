@@ -171,4 +171,4 @@ Développeur Full-Stack
 
 ##  Licence
 
-Ce projet a été réalisé dans le cadre d'un test technique et est destiné à un usage d'évaluation uniquement.
+Ce projet est distribué sous licence MIT.
