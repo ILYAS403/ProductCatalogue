@@ -56,7 +56,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:4200")
+                List.of(
+                        "http://localhost:4200",
+                        "http://127.0.0.1:4200"
+                )
         );
 
         configuration.setAllowedMethods(
@@ -88,8 +91,7 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products").authenticated()
                         .anyRequest().authenticated()
