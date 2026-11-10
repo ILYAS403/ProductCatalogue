@@ -43,24 +43,30 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Build and test backend
+      - name: Build, test, and generate backend coverage
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/product_catalog
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
-        run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+        run: >-
+          bash ./mvnw --batch-mode --no-transfer-progress clean
+          org.jacoco:jacoco-maven-plugin:0.8.14:prepare-agent
+          verify
+          org.jacoco:jacoco-maven-plugin:0.8.14:report
 
-      - name: Generate backend coverage report
+      - name: Verify backend coverage files
         if: always()
-        run: bash ./mvnw --batch-mode --no-transfer-progress org.jacoco:jacoco-maven-plugin:0.8.14:report -DskipTests
+        run: |
+          test -f target/site/jacoco/index.html
+          test -f target/site/jacoco/jacoco.xml
 
       - name: Upload backend coverage report
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: backend-coverage
-          path: ${{ github.workspace }}/Backend/target/site/jacoco
-          if-no-files-found: warn
+          path: ${{ github.workspace }}/Backend/target/site/jacoco/**
+          if-no-files-found: error
           retention-days: 14
 
   frontend:
