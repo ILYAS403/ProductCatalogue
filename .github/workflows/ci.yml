@@ -52,7 +52,7 @@ jobs:
 
       - name: Generate backend coverage report
         if: always()
-        run: bash ./mvnw --batch-mode --no-transfer-progress jacoco:report -DskipTests
+        run: bash ./mvnw --batch-mode --no-transfer-progress org.jacoco:jacoco-maven-plugin:0.8.14:report -DskipTests
 
       - name: Upload backend coverage report
         if: always()
