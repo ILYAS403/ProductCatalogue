@@ -30,7 +30,7 @@ jobs:
           cache: maven
 
       - name: Build backend
-        run:  bash ./mvnw --batch-mode --no-transfer-progress clean package -DskipTests
+        run:  bash ./mvnw --batch-mode --no-transfer-progress clean verify
 
   frontend:
     name: Build Node.js frontend
