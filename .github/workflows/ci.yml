@@ -49,6 +49,15 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+      
+
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-jacoco-report
+          path: Backend/target/site/jacoco/
+          if-no-files-found: error
+          retention-days: 7
 
   frontend:
     name: Build Node.js frontend
