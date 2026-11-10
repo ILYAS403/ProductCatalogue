@@ -74,7 +74,7 @@ public Product(String name, String category,  BigDecimal price, LocalDateTime cr
         this.createdAt = createdAt;
     }
     
-     @PrePersist
+     @PrePersist // Pour automatiser les dates de création
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
