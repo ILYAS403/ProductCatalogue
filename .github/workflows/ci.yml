@@ -49,16 +49,14 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
-      
-
-      
-      - name: Check JaCoCo report
-        run: |
-          echo "Checking JaCoCo files..."
-          ls -la target/
-          ls -la target/site/
-          ls -la target/site/jacoco/
-
+      - name: Upload backend coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: backend-coverage
+          path: Backend/target/site/jacoco
+          if-no-files-found: warn
+          retention-days: 14
 
   frontend:
     name: Build Node.js frontend
@@ -80,5 +78,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Run frontend tests with coverage
+        run: npm run test -- --coverage --watch=false
+
       - name: Build frontend
         run: npm run build
+
+    
