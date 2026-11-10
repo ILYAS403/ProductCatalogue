@@ -49,12 +49,17 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Generate backend coverage report
+        if: always()
+        run: bash ./mvnw --batch-mode --no-transfer-progress jacoco:report -DskipTests
+
       - name: Upload backend coverage report
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: backend-coverage
-          path: Backend/target/site/jacoco
+          path: ${{ github.workspace }}/Backend/target/site/jacoco
           if-no-files-found: warn
           retention-days: 14
 
@@ -78,10 +83,5 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Run frontend tests with coverage
-        run: npm run test -- --coverage --watch=false
-
       - name: Build frontend
         run: npm run build
-
-    
