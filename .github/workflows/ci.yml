@@ -51,13 +51,12 @@ jobs:
         run: bash ./mvnw --batch-mode --no-transfer-progress clean verify
       
 
-      - name: Upload JaCoCo coverage report
-        uses: actions/upload-artifact@v7
-        with:
-          name: backend-jacoco-report
-          path: Backend/target/site/jacoco/
-          if-no-files-found: error
-          retention-days: 7
+      - name: Check JaCoCo report
+        run: |
+          echo "Checking JaCoCo files..."
+          ls -la Backend/target/
+          ls -la Backend/target/site/
+          ls -la Backend/target/site/jacoco/
 
   frontend:
     name: Build Node.js frontend
