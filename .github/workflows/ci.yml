@@ -1,4 +1,4 @@
- name: CI Workflow - backend and frontend
+name: CI Workflow - backend and frontend
 
 on:
   push:
