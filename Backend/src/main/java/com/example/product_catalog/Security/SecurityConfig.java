@@ -55,10 +55,16 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
+        String frontendOrigin = System.getenv().getOrDefault(
+                "APP_FRONTEND_ORIGIN",
+                "http://localhost:4200"
+        );
+
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:4200",
-                        "http://127.0.0.1:4200"
+                        "http://127.0.0.1:4200",
+                        frontendOrigin
                 )
         );
 

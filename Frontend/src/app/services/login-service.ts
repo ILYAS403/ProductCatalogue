@@ -9,7 +9,7 @@ import { LoginRequest } from '../models/product';
 })
 export class LoginService {
 
-  private apiUrl = 'http://localhost:8080/api/auth/login';
+  private apiUrl = 'https://app-productcatalog-backend-ckh0dsdyaba3deb5.westus3-01.azurewebsites.net/api/auth/login';
 
   constructor(private http: HttpClient) {}
 
