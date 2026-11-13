@@ -1,0 +1,122 @@
+name: Build and deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AZURE_RESOURCE_GROUP: rg-productcatalog-dev
+  AZURE_ACR_NAME: acrproductcatalogilyas
+  AZURE_REGISTRY: acrproductcatalogilyas.azurecr.io
+  AZURE_BACKEND_APP: app-productcatalog-backend
+  AZURE_FRONTEND_APP: app-productcatalog-frontend
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-test-publish-deploy:
+    name: Build, publish and deploy
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: product_catalog
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d product_catalog"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Test backend
+        working-directory: Backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/product_catalog
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+        run: |
+          chmod +x mvnw
+          ./mvnw --batch-mode --no-transfer-progress verify
+
+      - name: Build frontend
+        working-directory: Frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign in to Azure Container Registry
+        run: az acr login --name "$AZURE_ACR_NAME"
+
+      - name: Build and push backend image
+        run: |
+          docker build --tag "$AZURE_REGISTRY/product-catalog-backend:$IMAGE_TAG" ./Backend
+          docker push "$AZURE_REGISTRY/product-catalog-backend:$IMAGE_TAG"
+
+      - name: Build and push frontend image
+        run: |
+          docker build --tag "$AZURE_REGISTRY/product-catalog-frontend:$IMAGE_TAG" ./Frontend
+          docker push "$AZURE_REGISTRY/product-catalog-frontend:$IMAGE_TAG"
+
+      - name: Configure backend container
+        run: |
+          az webapp config container set \
+            --name "$AZURE_BACKEND_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --container-image-name "$AZURE_REGISTRY/product-catalog-backend:$IMAGE_TAG" \
+            --container-registry-url "https://$AZURE_REGISTRY"
+          az webapp config set \
+            --name "$AZURE_BACKEND_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --generic-configurations '{"acrUseManagedIdentityCreds":true}'
+
+      - name: Configure frontend container
+        run: |
+          az webapp config container set \
+            --name "$AZURE_FRONTEND_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --container-image-name "$AZURE_REGISTRY/product-catalog-frontend:$IMAGE_TAG" \
+            --container-registry-url "https://$AZURE_REGISTRY"
+          az webapp config set \
+            --name "$AZURE_FRONTEND_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --generic-configurations '{"acrUseManagedIdentityCreds":true}'
+
+      - name: Restart Azure Web Apps
+        run: |
+          az webapp restart --name "$AZURE_BACKEND_APP" --resource-group "$AZURE_RESOURCE_GROUP"
+          az webapp restart --name "$AZURE_FRONTEND_APP" --resource-group "$AZURE_RESOURCE_GROUP"

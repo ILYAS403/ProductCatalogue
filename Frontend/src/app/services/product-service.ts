@@ -8,7 +8,7 @@ import { Product,CreateProduct } from '../models/product';
 })
 export class ProductService {
 
-  private apiUrl = 'http://localhost:8080/api/products';
+  private apiUrl = 'https://app-productcatalog-backend-ckh0dsdyaba3deb5.westus3-01.azurewebsites.net/api/products';
 
   constructor(private http: HttpClient) {}
 
