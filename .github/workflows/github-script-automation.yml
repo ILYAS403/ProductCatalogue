@@ -1,0 +1,118 @@
+name: Automatiser le tri des Issues
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  automate-issue:
+    name: Commenter et trier la nouvelle Issue
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Préparer les labels d’automatisation
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const labels = [
+              {
+                name: 'needs-triage',
+                color: 'D93F0B',
+                description: 'Issue à analyser par l’équipe'
+              },
+              {
+                name: 'needs-review',
+                color: '5319E7',
+                description: 'Issue à examiner avant traitement'
+              }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description
+                });
+              }
+            }
+
+      - name: Commenter automatiquement la nouvelle Issue
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: [
+                'Merci pour cette Issue !',
+                '',
+                'Elle a été reçue automatiquement par le workflow GitHub Script.',
+                'Elle va maintenant être analysée selon ses labels.'
+              ].join('\n')
+            });
+
+      - name: Traiter une Issue avec le label bug
+        if: contains(github.event.issue.labels.*.name, 'bug') && (github.event.action == 'opened' || github.event.label.name == 'bug')
+        uses: actions/github-script@v9
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'needs-review'
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['needs-triage']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Cette Issue est identifiée comme un bug. Elle a été marquée `needs-triage` pour analyse.'
+            });
+
+      - name: Traiter une Issue sans le label bug
+        if: github.event.action == 'opened' && !contains(github.event.issue.labels.*.name, 'bug')
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['needs-review']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Cette Issue ne porte pas le label `bug`. Elle a été marquée `needs-review` pour examen.'
+            });
