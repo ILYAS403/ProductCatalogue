@@ -1,0 +1,46 @@
+name: Publier les images Docker sur GHCR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ilyas403/productcatalogue
+  IMAGE_TAG: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  build-and-push:
+    name: Construire et publier les images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v6
+
+      - name: Se connecter à GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l’image backend
+        run: |
+          docker build \
+            --tag "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG" \
+            ./Backend
+          docker push "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG"
+
+      - name: Construire et publier l’image frontend
+        run: |
+          docker build \
+            --tag "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG" \
+            ./Frontend
+          docker push "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG"
