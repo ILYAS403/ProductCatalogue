@@ -1,10 +1,10 @@
 name: Publier les images Docker sur GHCR
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-  workflow_dispatch:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -13,6 +13,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAMESPACE: ilyas403/productcatalogue
+  IMAGE_TAG: pr-${{ github.event.pull_request.number }}
 
 jobs:
   build-and-push:
@@ -33,13 +34,13 @@ jobs:
       - name: Construire et publier l’image backend
         run: |
           docker build \
-            --tag "$REGISTRY/$IMAGE_NAMESPACE/backend:main" \
+            --tag "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG" \
             ./Backend
-          docker push "$REGISTRY/$IMAGE_NAMESPACE/backend:main"
+          docker push "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG"
 
       - name: Construire et publier l’image frontend
         run: |
           docker build \
-            --tag "$REGISTRY/$IMAGE_NAMESPACE/frontend:main" \
+            --tag "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG" \
             ./Frontend
-          docker push "$REGISTRY/$IMAGE_NAMESPACE/frontend:main"
+          docker push "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG"
