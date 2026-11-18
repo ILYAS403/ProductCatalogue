@@ -1,5 +1,7 @@
 name: Publier les images Docker sur GHCR
 
+# Workflow de validation des images Docker pour les Pull Requests.
+
 on:
   pull_request:
     branches:
