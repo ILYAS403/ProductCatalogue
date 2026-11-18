@@ -3,10 +3,15 @@ name: Publier les images Docker sur GHCR
 # Workflow de validation des images Docker pour les Pull Requests.
 
 on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
   pull_request:
     branches:
       - main
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,7 +20,6 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAMESPACE: ilyas403/productcatalogue
-  IMAGE_TAG: pr-${{ github.event.pull_request.number }}
 
 jobs:
   build-and-push:
@@ -33,16 +37,55 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construire et publier l’image backend
-        run: |
-          docker build \
-            --tag "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG" \
-            ./Backend
-          docker push "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG"
+      # Étape 1 — ancienne méthode manuelle conservée comme référence
+      # - name: Construire et publier l’image backend
+      #   run: |
+      #     docker build \
+      #       --tag "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG" \
+      #       ./Backend
+      #     docker push "$REGISTRY/$IMAGE_NAMESPACE/backend:$IMAGE_TAG"
+      #
+      # - name: Construire et publier l’image frontend
+      #   run: |
+      #     docker build \
+      #       --tag "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG" \
+      #       ./Frontend
+      #     docker push "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG"
 
-      - name: Construire et publier l’image frontend
-        run: |
-          docker build \
-            --tag "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG" \
-            ./Frontend
-          docker push "$REGISTRY/$IMAGE_NAMESPACE/frontend:$IMAGE_TAG"
+      # Étape 2 — actions Docker officielles
+      - name: Configurer QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Configurer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Étape 3 — générer automatiquement les tags selon l’événement GitHub
+      - name: Générer les métadonnées de l’image backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/backend
+
+      - name: Construire et publier l’image backend avec les tags dynamiques
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Backend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Générer les métadonnées de l’image frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/frontend
+
+      - name: Construire et publier l’image frontend avec les tags dynamiques
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Frontend
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
